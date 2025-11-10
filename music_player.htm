@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Music Player</title>
+<style>
+  :root {
+    --bg-color: #f8f5f1;
+    --accent-color: #5a3e2b;
+    --text-color: #2b1b0f;
+    --highlight-color: #8b5e3c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Poppins", sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    display: flex; justify-content: center; align-items: center;
+    height: 100vh; margin: 0;
+  }
+  .player {
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(90,62,43,0.2);
+    width: 360px; padding: 25px; text-align: center;
+  }
+  .cover {
+    width: 100%; height: 250px; border-radius: 15px;
+    object-fit: cover;
+    box-shadow: 0 5px 20px rgba(90,62,43,0.3);
+  }
+  .info { margin-top: 15px; }
+  .title { font-size: 1.2rem; font-weight: bold; }
+  .artist { font-size: 0.9rem; color: var(--highlight-color); }
+  .controls {
+    margin-top: 20px; display: flex;
+    justify-content: center; align-items: center; gap: 20px;
+  }
+  .controls button {
+    background: var(--accent-color); color: white;
+    border: none; border-radius: 50%;
+    width: 50px; height: 50px;
+    font-size: 1.2rem; cursor: pointer; transition: all 0.3s;
+  }
+  .controls button:hover { background: var(--highlight-color);}
+  .progress-container {
+    width: 100%; height: 8px; background-color: #ddd;
+    border-radius: 5px; margin: 20px 0; cursor: pointer;
+  }
+  .progress {
+    background-color: var(--accent-color);
+    height: 8px; width: 0%; border-radius: 5px;
+  }
+  .volume-control {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  input[type="range"] { width: 120px; }
+  .playlist { margin-top: 15px; text-align: left;}
+  .playlist h3 {
+    font-size: 1rem; color: var(--accent-color); margin-bottom: 8px;
+  }
+  .playlist ul {
+    list-style: none; padding: 0; margin: 0;
+    max-height: 100px; overflow-y: auto;
+  }
+  .playlist li {
+    padding: 5px 8px; border-radius: 8px; cursor: pointer; transition: 0.2s;
+  }
+  .playlist li:hover,
+  .playlist li.active {
+    background-color: var(--accent-color); color: white;
+  }
+</style>
+</head>
+<body>
+<div class="player">
+  <img id="cover" class="cover" src="" alt="Album cover" />
+  <div class="info">
+    <div class="title" id="title">Song Title</div>
+    <div class="artist" id="artist">Artist Name</div>
+  </div>
+  <div class="progress-container" id="progress-container">
+    <div class="progress" id="progress"></div>
+  </div>
+  <div class="controls">
+    <button id="prev">⏮</button>
+    <button id="play">▶️</button>
+    <button id="next">⏭</button>
+  </div>
+  <div class="volume-control">
+    🔊 <input type="range" id="volume" min="0" max="1" step="0.1" value="1" />
+  </div>
+  <div class="playlist">
+    <h3>Playlist</h3>
+    <ul id="playlist"></ul>
+  </div>
+</div>
+
+<script>
+const songs = [
+  {
+    title: "Left and Right",
+    artist: "Charlie puth & Jungkook",
+    src: "left_and_right.mp3",
+    cover: "https://upload.wikimedia.org/wikipedia/en/8/8a/Left_and_Right_-_Charlie_Puth.png"
+  },
+  {
+    title: "Stay",
+    artist: "Justin Bieber & The Kid LAROI",
+    src: "stay.mp3",
+    cover: "https://i.ytimg.com/vi/aHshxZuDuuo/sddefault.jpg"
+  },
+  {
+    title: "Universe",
+    artist: "Coldplay & BTS", 
+    src: "Universe.mp3",
+    cover: "Universe.jpeg"
+  },
+  {
+    title: "Love Story",
+    artist: "Taylor Swift",
+    src: "love_story.mp3", 
+    cover: "https://images.bestofbharat.com/2023/10/MHN-WGL-PNTN-045.jpg"
+  },
+  {
+    title: "Senorita",
+    artist: "Shawn Mendes & Camila Cabello",
+    src: "senorita.mp3", 
+    cover: "https://i.pinimg.com/474x/1e/e4/9c/1ee49c4190fc422c5ff552bdb3601c69.jpg"
+  },
+  {
+    title: "Shape of You",
+    artist: "Ed Sheeran",
+    src: "shape_of_you.mp3", 
+    cover: "https://i.pinimg.com/1200x/e6/5f/0c/e65f0c6ede57573306205af9dd7a115c.jpg"
+  }
+];
+
+let currentSongIndex = 0;
+const audio = new Audio();
+const title = document.getElementById("title");
+const artist = document.getElementById("artist");
+const cover = document.getElementById("cover");
+const playBtn = document.getElementById("play");
+const prevBtn = document.getElementById("prev");
+const nextBtn = document.getElementById("next");
+const progressContainer = document.getElementById("progress-container");
+const progress = document.getElementById("progress");
+const volumeControl = document.getElementById("volume");
+const playlistEl = document.getElementById("playlist");
+
+function loadSong(index) {
+  const song = songs[index];
+  title.textContent = song.title;
+  artist.textContent = song.artist;
+  cover.src = song.cover;
+  audio.src = song.src;
+  document.querySelectorAll("#playlist li").forEach(li => li.classList.remove("active"));
+  playlistEl.children[index].classList.add("active");
+}
+
+function playSong() {
+  audio.play();
+  playBtn.textContent = "⏸";
+}
+
+function pauseSong() {
+  audio.pause();
+  playBtn.textContent = "▶️";
+}
+
+playBtn.addEventListener("click", () => {
+  if (audio.paused) playSong();
+  else pauseSong();
+});
+
+nextBtn.addEventListener("click", () => {
+  currentSongIndex = (currentSongIndex + 1) % songs.length;
+  loadSong(currentSongIndex);
+  playSong();
+});
+
+prevBtn.addEventListener("click", () => {
+  currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+  loadSong(currentSongIndex);
+  playSong();
+});
+
+audio.addEventListener("timeupdate", () => {
+  const progressPercent = (audio.currentTime / audio.duration) * 100;
+  progress.style.width = progressPercent + "%";
+});
+
+progressContainer.addEventListener("click", (e) => {
+  const width = progressContainer.clientWidth;
+  const clickX = e.offsetX;
+  const duration = audio.duration;
+  audio.currentTime = (clickX / width) * duration;
+});
+
+volumeControl.addEventListener("input", (e) => {
+  audio.volume = e.target.value;
+});
+
+audio.addEventListener("ended", () => {
+  currentSongIndex = (currentSongIndex + 1) % songs.length;
+  loadSong(currentSongIndex);
+  playSong();
+});
+
+songs.forEach((song, index) => {
+  const li = document.createElement("li");
+  li.textContent = `${song.title} - ${song.artist}`;
+  li.addEventListener("click", () => {
+    currentSongIndex = index;
+    loadSong(index);
+    playSong();
+  });
+  playlistEl.appendChild(li);
+});
+
+loadSong(currentSongIndex);
+
+</script>
+</body>
+</html>
